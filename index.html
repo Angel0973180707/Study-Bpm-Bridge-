@@ -28,6 +28,10 @@
         .primary-pink-btn:disabled { background-color: #cbd5e1; color: #94a3b8; box-shadow: none; cursor: not-allowed; opacity: 0.7; }
         
         .quiz-card-btn { min-height: 8.5rem; height: auto; padding: 1.2rem 0.4rem; border-width: 2px; }
+        
+        /* 報告裝飾 */
+        .dim-card { transition: all 0.3s ease; }
+        .dim-card:hover { transform: translateY(-2px); }
     </style>
 </head>
 <body class="pb-12 text-slate-800 text-sm">
@@ -46,7 +50,7 @@
         <main id="main-content" class="px-5 py-6 flex-1"></main>
 
         <footer class="text-center opacity-30 py-6">
-            <p class="text-[8px] font-black tracking-[0.3em] uppercase text-slate-400">Happiness Mastermind · V5.90 Professional Plan</p>
+            <p class="text-[8px] font-black tracking-[0.3em] uppercase text-slate-400">Happiness Mastermind · V6.00 Strategic Growth</p>
         </footer>
     </div>
 
@@ -151,46 +155,65 @@
                             <h2 class="text-lg font-black text-slate-800 mb-5 tracking-tight">${state.formData.name} 寶貝家長：</h2>
                             
                             <div class="grid grid-cols-2 gap-3 mb-6">
-                                <div class="bg-slate-50 p-3 rounded-2xl border border-slate-100">
-                                    <p class="text-[8px] font-bold text-slate-400 uppercase tracking-widest mb-1">大腦解碼反應速</p>
+                                <div class="bg-slate-50 p-3 rounded-2xl border border-slate-100 text-center">
+                                    <p class="text-[8px] font-bold text-slate-400 uppercase tracking-widest mb-1">整體解碼反應</p>
                                     <p class="text-xl font-black text-pink-500">${avgTime}<span class="text-[10px] ml-1">秒</span></p>
                                 </div>
-                                <div class="bg-slate-50 p-3 rounded-2xl border border-slate-100">
+                                <div class="bg-slate-50 p-3 rounded-2xl border border-slate-100 text-center">
                                     <p class="text-[8px] font-bold text-slate-400 uppercase tracking-widest mb-1">神經辨識準度</p>
                                     <p class="text-xl font-black text-blue-500">${accuracy}<span class="text-[10px] ml-1">%</span></p>
                                 </div>
                             </div>
 
                             <div class="space-y-6">
+                                <!-- 綜合診斷 -->
                                 <section class="bg-slate-50 p-6 rounded-[28px] text-[13px] text-slate-600 font-medium leading-relaxed">
-                                    <p class="mb-3 font-black text-slate-800 text-sm">【五大維度學理診斷】</p>
+                                    <p class="mb-3 font-black text-slate-800 text-sm">【綜合學理診斷】</p>
                                     ${state.report.diagnosis}
                                     
-                                    <div class="mt-5 pt-4 border-t border-slate-200">
-                                        <p class="font-black text-pink-500 mb-2 text-xs">🎯 階段性教學目標設定：</p>
+                                    <!-- 面向分析區塊 -->
+                                    <div class="mt-6 space-y-4">
+                                        <p class="font-black text-slate-800 text-xs flex items-center gap-2">
+                                            <span class="w-1 h-4 bg-pink-400 rounded-full"></span>
+                                            各維度數據與加強建議
+                                        </p>
+                                        ${state.report.dimensions.map(dim => `
+                                            <div class="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm dim-card">
+                                                <div class="flex justify-between items-center mb-2">
+                                                    <span class="text-xs font-black text-slate-700">${dim.name}</span>
+                                                    <span class="text-[9px] px-2 py-0.5 rounded-full ${dim.status === '優異' ? 'bg-green-50 text-green-600' : 'bg-orange-50 text-orange-600'} font-bold">${dim.status}</span>
+                                                </div>
+                                                <p class="text-[11px] text-slate-500 leading-relaxed mb-2">${dim.insight}</p>
+                                                <div class="text-[10px] text-pink-500 font-bold bg-pink-50/50 p-2 rounded-lg border-l-2 border-pink-200">
+                                                    💡 加強建議：${dim.suggestion}
+                                                </div>
+                                            </div>
+                                        `).join('')}
+                                    </div>
+
+                                    <!-- 階段目標與規劃 -->
+                                    <div class="mt-6 pt-5 border-t border-slate-200">
+                                        <p class="font-black text-pink-500 mb-3 text-xs">🎯 階段性教學規劃：</p>
                                         <div class="space-y-3 mb-5">
                                             <div class="bg-pink-50 p-3 rounded-xl border border-pink-100">
-                                                <p class="text-[10px] font-black text-pink-600 mb-1">第一階段：神經連結穩定</p>
+                                                <p class="text-[10px] font-black text-pink-600 mb-1">Phase 1：神經連結穩定期</p>
                                                 <p class="text-[11px] leading-tight text-slate-600">${state.report.goalStage1}</p>
                                             </div>
                                             <div class="bg-blue-50 p-3 rounded-xl border border-blue-100">
-                                                <p class="text-[10px] font-black text-blue-600 mb-1">第二階段：腦迴路自動化</p>
+                                                <p class="text-[10px] font-black text-blue-600 mb-1">Phase 2：腦迴路自動化期</p>
                                                 <p class="text-[11px] leading-tight text-slate-600">${state.report.goalStage2}</p>
                                             </div>
                                         </div>
 
-                                        <p class="font-black text-slate-700 mb-2 text-xs">🧠 加強課專屬規劃：</p>
+                                        <p class="font-black text-slate-700 mb-2 text-xs">🧠 專屬強化訓練規劃：</p>
                                         <div class="bg-slate-800 p-4 rounded-2xl text-slate-200 border border-slate-700 shadow-inner">
                                             <p class="text-[11px] leading-relaxed italic">${state.report.coursePlan}</p>
                                         </div>
-
-                                        <div class="mt-5 p-3 bg-white rounded-xl border border-slate-100 italic">
-                                            <p class="text-[9px] font-bold text-slate-400 leading-tight">分析結果供製定學習方案。堂數視寶貝學習狀況，彈性伸縮。</p>
-                                        </div>
                                     </div>
                                 </section>
+
                                 <div class="border-t border-dashed border-pink-200 pt-5">
-                                    <p class="text-xs font-black text-pink-500 mb-2">笑長悄悄話：</p>
+                                    <p class="text-xs font-black text-pink-500 mb-1">笑長悄悄話：</p>
                                     <p class="text-sm font-bold text-pink-500 leading-relaxed italic">${state.report.angelNote}</p>
                                 </div>
                             </div>
@@ -200,8 +223,8 @@
             } else if (state.step === 4) {
                 el.innerHTML = `
                     <div class="space-y-5 animate-fade-in text-left">
-                        <div class="bg-white p-7 rounded-[35px] shadow-sm border border-pink-50">
-                            <h2 class="text-lg font-black text-slate-800 mb-6 no-break text-center">幸福教養方案報價</h2>
+                        <div class="bg-white p-7 rounded-[35px] shadow-sm border border-pink-50 text-center">
+                            <h2 class="text-lg font-black text-slate-800 mb-6 no-break">幸福教養方案報價</h2>
                             <div class="space-y-5">
                                 <div class="grid grid-cols-2 gap-3">
                                     <div class="p-4 bg-slate-50 rounded-[25px] border border-slate-100 flex flex-col justify-center">
@@ -214,12 +237,12 @@
                                     </div>
                                 </div>
                                 
-                                <div class="p-6 bg-gradient-to-br from-pink-400 to-pink-500 text-white rounded-[30px] shadow-lg relative overflow-hidden border border-pink-300">
+                                <div class="p-6 bg-gradient-to-br from-pink-400 to-pink-500 text-white rounded-[30px] shadow-lg relative overflow-hidden border border-pink-300 text-left">
                                     <div class="relative z-10">
                                         <div class="text-[9px] font-black uppercase tracking-widest opacity-80 mb-1">🏅 客製化教養方案</div>
                                         <div class="text-2xl font-black mb-1.5">專屬成長路徑</div>
                                         <div class="text-[10px] leading-relaxed opacity-90">
-                                            基於前測學理分析製定。我們重視「認知負荷」的動態調整，堂數將視寶貝學習狀況彈性伸縮，確保大腦自動化路徑穩定建立。
+                                            分析結果將作為製定方案之基準。具體堂數視寶貝學習狀況彈性伸縮，核心目標在於建立穩定的「大腦解碼路徑」，釋放認知負擔。
                                         </div>
                                     </div>
                                     <div class="absolute -bottom-3 -right-3 opacity-10">
@@ -227,7 +250,7 @@
                                     </div>
                                 </div>
                             </div>
-                            <button onclick="window.open('https://line.me/R/msg/text/?'+encodeURIComponent('【前測精密學理診斷】\\n寶貝：'+state.formData.name+'\\n瓶頸：'+state.report.bottleneck+'\\n加強課規劃：'+state.report.coursePlan.substring(0,50)+'...\\n家長對彈性堂數方案有興趣'), '_blank')" class="w-full mt-7 bg-[#06C755] text-white py-4.5 rounded-[25px] font-black text-base no-break text-center">按一下回傳前測分析</button>
+                            <button onclick="window.open('https://line.me/R/msg/text/?'+encodeURIComponent('【前測多維度學理診斷】\\n寶貝：'+state.formData.name+'\\n核心瓶頸：'+state.report.bottleneck+'\\n加強建議：'+state.report.dimensions.filter(d => d.status!=='優異').map(d => d.name).join('、')+'需強化。\\n第一階段目標：'+state.report.goalStage1+'\\n'), '_blank')" class="w-full mt-7 bg-[#06C755] text-white py-4.5 rounded-[25px] font-black text-base no-break text-center">按一下回傳前測分析</button>
                         </div>
                     </div>`;
             }
@@ -248,24 +271,28 @@
         async function generateReport() {
             const apiKey = ""; 
             const sys = `你是一位具備教育心理學與腦科學深厚背景的「天使笑長」。
-            請根據數據產出具備專業學理性、針對性的診斷 JSON。
+            請根據學生的精密測驗數據產出專業診斷 JSON。
             
             【規範與學理要求】：
             1. 稱呼僅限「${state.formData.name} 寶貝家長您好：」。
-            2. 診斷運用術語：認知負荷(Cognitive Load)、音韻覺識(Phonological Awareness)、解碼自動化、視覺空間解碼。
+            2. 診斷必須運用學理術語：認知負荷(Cognitive Load)、神經可塑性、視覺空間解碼、音韻覺識(Phonological Awareness)、解碼自動化。
             3. 分析數據時，需說明反應時間(duration)長短反映的解碼成本。
             
-            【加強課規劃要求】：
-            1. 根據測驗結果中最薄弱的部分（錯誤多或反應慢的維度），擬定加強方案。
-            2. 方案需具備具體的學理訓練方式，如「音韻合成辨識法」或「視覺排他性訓練」。
-            3. 註明此規劃供方案製定參考。
+            【面向分析要求】：
+            請針對測驗的五個維度分別提供：
+            - status: 根據準確率與速度判定為「優異」或「需強化」。
+            - insight: 從學理說明表現反映的大腦運作特徵。
+            - suggestion: 具體的家庭或課堂加強建議。
             
-            JSON 結構：
+            JSON 結構（嚴格執行）：
             {
-              "diagnosis": "學理診斷內容(150字內)",
+              "diagnosis": "綜合學理診斷內容(150字內)",
+              "dimensions": [
+                { "name": "面向名稱", "status": "狀態", "insight": "學理洞察", "suggestion": "加強建議" }
+              ],
               "goalStage1": "第一階段目標(40字內)",
               "goalStage2": "第二階段目標(40字內)",
-              "coursePlan": "針對薄弱環節擬定的加強課規劃，需包含具體訓練方式。(80字內)",
+              "coursePlan": "專屬強化規劃(80字內)",
               "bottleneck": "一句話總結核心學理瓶頸",
               "angelNote": "專業溫暖的悄悄話，從家長心靈支持出發(50字內)"
             }`;
@@ -287,13 +314,13 @@
                     state.step = 3; render(); return;
                 } catch (e) { await new Promise(r => setTimeout(r, Math.pow(2, i) * 1000)); }
             }
+            // Fallback
             state.report = { 
-                diagnosis: `${state.formData.name} 寶貝家長您好：從數據看來，寶貝在拼讀自動化路徑上仍有優化空間，建議透過系統化練習降低大腦解碼的認知負荷。`, 
-                goalStage1: "穩定音韻覺識與視覺空間的連結效率。",
-                goalStage2: "強化神經迴路的自動化提取速度。",
-                coursePlan: "強化「音韻合成」練習，透過每日 15 分鐘的聽覺剝離訓練，建立穩定的解碼神經路徑。",
-                bottleneck: "大腦解碼自動化程度待優化", 
-                angelNote: "您的溫暖陪伴，能啟動孩子的前額葉發展，讓學習更高效。" 
+                diagnosis: `${state.formData.name} 寶貝家長您好：整體數據顯示寶貝在神經辨識上有一定基礎，但高階自動化路徑仍需優化。`, 
+                dimensions: [{ name: "綜合能力", status: "需強化", insight: "解碼成本偏高導致認知疲勞。", suggestion: "多進行快速閃視拼讀練習。" }],
+                goalStage1: "穩定音韻連結效率。", goalStage2: "建立解碼自動化路徑。",
+                coursePlan: "強化音韻覺識訓練，降低解碼負荷。", bottleneck: "自動化程度待優化",
+                angelNote: "您的陪伴與肯定，是孩子大腦神經連結最穩固的催化劑。" 
             };
             state.step = 3; render();
         }

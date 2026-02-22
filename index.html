@@ -13,7 +13,7 @@
         @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes zoomIn { from { opacity: 0; scale: 0.95; } to { opacity: 1; scale: 1; } }
         
-        /* --- 垂直注音指令排版 --- */
+        /* --- 幸福智多星：專屬垂直注音排版系統 --- */
         .zhuyin-container { display: inline-flex; flex-direction: row; flex-wrap: wrap; align-items: flex-start; justify-content: center; gap: 1.8rem; padding: 0.5rem; max-width: 100%; }
         .syllable-v-stack { display: inline-flex; flex-direction: column; align-items: center; position: relative; line-height: 1.15; min-width: 1.6rem; }
         .symbol-item { font-size: 1.45rem; height: 1.5rem; font-weight: 800; color: #334155; display: flex; align-items: center; justify-content: center; position: relative; }
@@ -34,9 +34,8 @@
 <body class="pb-12 text-slate-800">
 
     <div id="app" class="max-w-md mx-auto min-h-screen flex flex-col">
-        <!-- Header: 回歸笑長最滿意的比例 -->
         <header class="bg-white px-6 pt-10 pb-6 rounded-b-[45px] shadow-sm border-b border-pink-100 sticky top-0 z-50 flex items-center justify-start gap-4">
-            <div class="w-10 h-10 bg-pink-400 rounded-xl flex items-center justify-center text-white shadow-lg shadow-pink-100 transition-transform active:scale-90">
+            <div class="w-10 h-10 bg-pink-400 rounded-xl flex items-center justify-center text-white shadow-lg transition-transform active:scale-90">
                 <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
             </div>
             <div class="text-left">
@@ -48,7 +47,7 @@
         <main id="main-content" class="px-5 py-8 flex-1"></main>
 
         <footer class="text-center opacity-30 py-8">
-            <p class="text-[9px] font-black tracking-[0.3em] uppercase text-slate-400">Happiness Mastermind · V5.9 Final</p>
+            <p class="text-[9px] font-black tracking-[0.3em] uppercase text-slate-400">Happiness Mastermind · V5.10 Transparent</p>
         </footer>
     </div>
 
@@ -56,17 +55,17 @@
         let state = { step: 0, formData: { name: '', hasFilledForm: false }, quizIndex: 0, quizResults: [], report: null, startTime: 0 };
 
         const QUIZ_BANK = [
-            { id: 1, type: '視覺排他', p: 'b', a: 'ㄅ', opts: ['ㄅ','ㄉ','ㄆ','ㄌ'] },
-            { id: 2, type: '視覺排他', p: 'p', a: 'ㄆ', opts: ['ㄑ','ㄆ','ㄡ','ㄅ'] },
-            { id: 3, type: '視覺排他', p: 'm', a: 'ㄇ', opts: ['ㄇ','ㄋ','ㄈ','ㄩ'] },
-            { id: 4, type: '聲調辨識', p: 'bà', a: 'ㄅㄚˋ', opts: ['ㄅㄚˋ','ㄆㄚˋ','ㄅㄚˇ','ㄆㄚ'] },
-            { id: 5, type: '聲調辨識', p: 'lóu', a: 'ㄌㄡˊ', opts: ['ㄌㄡˊ','ㄋㄡˊ','ㄌㄡˇ','ㄖㄡˊ'] },
-            { id: 6, type: '結合韻', p: 'lian', a: 'ㄌㄧㄢ', opts: ['ㄌㄧㄢ','ㄌㄢ','ㄌㄧㄥ','ㄋㄧㄢ'] },
-            { id: 7, type: '結合韻', p: 'huang', a: 'ㄏㄨㄤ', opts: ['ㄏㄨㄤ','ㄏㄤ','ㄏㄨㄥ','ㄏㄨㄢ'] },
-            { id: 8, type: '特殊音節', p: 'chi', a: 'ㄔ', opts: ['ㄔ','ㄔㄧ','ㄕ','ㄗ'] }, 
-            { id: 9, type: '特殊音節', p: 'si', a: 'ㄙ', opts: ['ㄙ','ㄙㄧ','ㄕ','ㄒㄧ'] },
-            { id: 10, type: '反射速度', p: 'xué xiào', a: 'ㄒㄩㄝˊ ㄒㄧㄠˋ', opts: ['ㄒㄩㄝˊ ㄒㄧㄠˋ','ㄒㄩㄝˇ ㄒㄧㄠ','ㄒㄧㄝˊ ㄒㄧㄠˋ','ㄒㄩㄝˊ ㄒㄧㄠ'] },
-            { id: 11, type: '反射速度', p: 'péng yǒu', a: 'ㄆㄥˊ ㄧㄡˇ', opts: ['ㄆㄥˊ ㄧㄡˇ','ㄅㄥˊ ㄧㄡˇ','ㄆㄥˊ ㄧㄡ','ㄆㄥˇ ㄧㄡ'] }
+            { id: 1, p: 'b', a: 'ㄅ', opts: ['ㄅ','ㄉ','ㄆ','ㄌ'] },
+            { id: 2, p: 'p', a: 'ㄆ', opts: ['ㄑ','ㄆ','ㄡ','ㄅ'] },
+            { id: 3, p: 'm', a: 'ㄇ', opts: ['ㄇ','ㄋ','ㄈ','ㄩ'] },
+            { id: 4, p: 'bà', a: 'ㄅㄚˋ', opts: ['ㄅㄚˋ','ㄆㄚˋ','ㄅㄚˇ','ㄆㄚ'] },
+            { id: 5, p: 'lóu', a: 'ㄌㄡˊ', opts: ['ㄌㄡˊ','ㄋㄡˊ','ㄌㄡˇ','ㄖㄡˊ'] },
+            { id: 6, p: 'lian', a: 'ㄌㄧㄢ', opts: ['ㄌㄧㄢ','ㄌㄢ','ㄌㄧㄥ','ㄋㄧㄢ'] },
+            { id: 7, p: 'huang', a: 'ㄏㄨㄤ', opts: ['ㄏㄨㄤ','ㄏㄤ','ㄏㄨㄥ','ㄏㄨㄢ'] },
+            { id: 8, p: 'chi', a: 'ㄔ', opts: ['ㄔ','ㄔㄧ','ㄕ','ㄗ'] }, 
+            { id: 9, p: 'si', a: 'ㄙ', opts: ['ㄙ','ㄙㄧ','ㄕ','ㄒㄧ'] },
+            { id: 10, p: 'xué xiào', a: 'ㄒㄩㄝˊ ㄒㄧㄠˋ', opts: ['ㄒㄩㄝˊ ㄒㄧㄠˋ','ㄒㄩㄝˇ ㄒㄧㄠ','ㄒㄧㄝˊ ㄒㄧㄠˋ','ㄒㄩㄝˊ ㄒㄧㄠ'] },
+            { id: 11, p: 'péng yǒu', a: 'ㄆㄥˊ ㄧㄡˇ', opts: ['ㄆㄥˊ ㄧㄡˇ','ㄅㄥˊ ㄧㄡˇ','ㄆㄥˊ ㄧㄡ','ㄆㄥˇ ㄧㄡ'] }
         ];
 
         function formatZhuyinVertical(str) {
@@ -96,19 +95,16 @@
             if (state.step === 0) {
                 el.innerHTML = `
                     <div class="bg-white p-9 rounded-[45px] shadow-sm border border-pink-50 animate-fade-in text-left">
-                        <h2 class="text-base font-black text-slate-700 mb-6 no-break flex items-center gap-3">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#F472B6" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                            第一步：預約表單
-                        </h2>
+                        <h2 class="text-base font-black text-slate-700 mb-6 no-break flex items-center gap-3">第一步：預約表單</h2>
                         <div class="space-y-7">
-                            <button onclick="window.open('https://forms.gle/Ph8FfFPRtgMcVr5W8', '_blank')" class="w-full bg-blue-50 text-blue-600 py-4 rounded-[28px] font-black border border-blue-100 shadow-sm text-[10px]">前往 Google 預約表單</button>
+                            <button onclick="window.open('https://forms.gle/Ph8FfFPRtgMcVr5W8', '_blank')" class="w-full bg-blue-50 text-blue-600 py-4 rounded-[28px] font-black border border-blue-100 text-[10px]">前往 Google 預約表單</button>
                             <div class="flex items-center gap-4 p-1">
                                 <input type="checkbox" id="form-check" class="w-5 h-5 rounded-lg text-pink-500" ${state.formData.hasFilledForm ? 'checked' : ''}>
                                 <label for="form-check" class="text-[9px] text-slate-400 font-bold">我已完成填寫並返回網頁</label>
                             </div>
                             <div class="pt-2">
                                 <label class="text-[11px] font-black text-slate-400 mb-2 block uppercase tracking-widest">寶貝姓名</label>
-                                <input id="name-input" type="text" class="w-full p-5 bg-slate-50 rounded-[28px] border-none outline-none text-lg font-bold text-slate-700" placeholder="例如：小明" value="${state.formData.name}">
+                                <input id="name-input" type="text" class="w-full p-5 bg-slate-50 rounded-[28px] border-none outline-none text-lg font-bold text-slate-700 shadow-inner" placeholder="例如：小明" value="${state.formData.name}">
                             </div>
                             <button id="start-btn" class="primary-pink-btn w-full text-white py-5 rounded-[30px] font-black text-lg transition-all disabled:opacity-50">幫寶貝前測</button>
                         </div>
@@ -127,10 +123,10 @@
                 el.innerHTML = `
                     <div class="bg-white p-8 rounded-[45px] shadow-sm animate-fade-in relative border border-pink-50 text-center">
                         <div class="absolute top-0 left-0 w-full h-2 bg-slate-50"><div class="h-full bg-pink-400 transition-all duration-500" style="width: ${((state.quizIndex + 1) / 11) * 100}%"></div></div>
-                        <div class="flex justify-between items-center mb-10 mt-4"><span class="bg-pink-100 text-pink-600 px-4 py-1.5 rounded-full text-[10px] font-black">前測診斷</span><span class="text-[10px] font-black text-slate-300">${state.quizIndex + 1} / 11</span></div>
+                        <div class="flex justify-between items-center mb-10 mt-4"><span class="bg-pink-100 text-pink-600 px-4 py-1.5 rounded-full text-[10px] font-black">前測指標</span><span class="text-[10px] font-black text-slate-300">${state.quizIndex + 1} / 11</span></div>
                         <div class="text-5xl font-black text-slate-800 tracking-[0.25em] bg-slate-50 py-12 rounded-[45px] mb-10 shadow-inner font-serif">${q.p}</div>
                         <div class="grid grid-cols-2 gap-5">
-                            ${opts.map(opt => `<button onclick="handleAnswer('${opt}')" class="quiz-card-btn bg-white border-2 border-slate-100 rounded-[35px] font-black text-slate-700 flex items-center justify-center">${formatZhuyinVertical(opt)}</button>`).join('')}
+                            ${opts.map(opt => `<button onclick="handleAnswer('${opt}')" class="quiz-card-btn bg-white border-2 border-slate-100 rounded-[35px] font-black text-slate-700 flex items-center justify-center shadow-sm active:scale-95 transition-all">${formatZhuyinVertical(opt)}</button>`).join('')}
                         </div>
                     </div>
                 `;
@@ -153,14 +149,23 @@
             const promptData = { name: state.formData.name, data: state.quizResults };
             const sys = `你是一位專業教育銜接的「天使笑長」，請根據數據擬定 JSON: { "diagnosis": "診斷內容", "bottleneck": "瓶頸", "angelNote": "建議" }`;
             try {
-                // 加入快取消除參數 (Timestamp)
+                // 加入時間戳記避免快取
                 const resp = await fetch(`/api/diagnose?t=${Date.now()}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ promptData, systemInstruction: sys })
                 });
+                
                 const data = await resp.json();
-                if (!resp.ok) throw new Error(data.error || '連線異常');
+                
+                // 如果後端小幫手回傳錯誤
+                if (!resp.ok) {
+                    throw new Error(data.error || `HTTP 狀態碼: ${resp.status}`);
+                }
+
+                if (!data.candidates || data.candidates.length === 0) {
+                    throw new Error('AI 思考後沒有產出內容，可能是被安全過濾器攔截。');
+                }
 
                 let text = data.candidates[0].content.parts[0].text;
                 text = text.replace(/```json/g, '').replace(/```/g, '').replace(/^[^{]*/, '').replace(/[^}]*$/, '').trim();
@@ -168,7 +173,15 @@
                 state.report = JSON.parse(text);
                 state.step = 3; render();
             } catch (e) {
-                document.getElementById('main-content').innerHTML = `<div class="p-10 text-center animate-fade-in text-red-500 font-bold"><p class="mb-4">⚠️ 解析失敗：${e.message}</p><button onclick="window.location.reload()" class="bg-slate-800 text-white px-8 py-3 rounded-full text-sm">重啟系統</button></div>`;
+                console.error('Diagnosis Error:', e);
+                document.getElementById('main-content').innerHTML = `
+                    <div class="p-10 text-center animate-fade-in text-red-500 font-bold">
+                        <p class="mb-2">⚠️ 科技連線中斷</p>
+                        <div class="bg-red-50 p-4 rounded-2xl text-[10px] text-red-600 font-mono text-left mb-6 break-words">
+                            診斷訊息：${e.message}
+                        </div>
+                        <button onclick="window.location.reload()" class="bg-slate-800 text-white px-8 py-3 rounded-full text-sm">點此重啟系統</button>
+                    </div>`;
             }
         }
         render();

@@ -9,58 +9,76 @@
             --primary: #FFB7C5; --secondary: #E0F7FA; --accent: #FF8A80;
         }
         body { font-family: "Microsoft JhengHei", sans-serif; background: #FFF9E3; display: flex; justify-content: center; padding: 20px; }
-        #app { max-width: 600px; width: 100%; background: white; padding: 30px; border-radius: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); text-align: center; }
-        .pinyin-box { font-size: 3.5rem; color: #00796B; margin: 20px 0; font-weight: bold; }
-        .btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 20px; }
-        button { padding: 20px; font-size: 1.5rem; border: 2px solid var(--secondary); border-radius: 15px; background: white; cursor: pointer; transition: 0.2s; }
+        #app { max-width: 500px; width: 100%; background: white; padding: 25px; border-radius: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); text-align: center; }
+        
+        /* 縮小顯示區域，解決斷字問題 */
+        .pinyin-box { 
+            font-size: 2rem; /* 縮小字體 */
+            color: #00796B; 
+            margin: 15px 0; 
+            font-weight: bold;
+            letter-spacing: 2px;
+            word-break: keep-all; /* 防止單詞斷開 */
+        }
+        
+        #instruction { color: #888; font-size: 1rem; margin-bottom: 20px; }
+
+        .btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 15px; }
+        
+        /* 調整按鈕大小以適應注音詞組 */
+        button { 
+            padding: 12px 8px; 
+            font-size: 1.1rem; /* 稍微縮小按鈕字體 */
+            border: 2px solid var(--secondary); 
+            border-radius: 12px; 
+            background: white; 
+            cursor: pointer; 
+            transition: 0.2s;
+            white-space: nowrap; /* 確保注音不換行 */
+        }
         button:hover { background: var(--primary); color: white; }
+        
         .report { text-align: left; background: #F1F8E9; padding: 20px; border-radius: 15px; margin-top: 20px; display: none; }
-        .indicator { margin-bottom: 10px; border-bottom: 1px dashed #ccc; padding-bottom: 5px; }
+        .indicator { margin-bottom: 12px; border-bottom: 1px dashed #ccc; padding-bottom: 8px; font-size: 0.95rem; }
+        .score-summary { color: var(--accent); font-weight: bold; margin-bottom: 15px; border-bottom: 2px solid var(--accent); display: inline-block; }
     </style>
 </head>
 <body>
 
 <div id="app">
-    <h1 style="color: var(--accent);">✨ 大腦密碼轉換前測 ✨</h1>
+    <h1 style="color: var(--accent); font-size: 1.4rem;">✨ 大腦密碼轉換前測 ✨</h1>
     <div id="quiz-container">
-        <p id="progress">準備開始...</p>
-        <div class="pinyin-box" id="pinyin-display">---</div>
-        <p id="instruction">點擊下方按鈕開始測驗</p>
+        <p id="progress" style="font-size: 0.9rem; color: #999;">點擊按鈕開始診斷</p>
+        <div class="pinyin-box" id="pinyin-display">歡迎使用</div>
+        <p id="instruction">請找出對應的注音符號</p>
         <div class="btn-grid" id="options">
-            <button onclick="startQuiz()" style="grid-column: span 2;">點我開始測驗 (開啟聲音)</button>
+            <button onclick="startQuiz()" style="grid-column: span 2;">開始前測</button>
         </div>
     </div>
 
     <div id="report-area" class="report">
-        <h3>📊 大腦轉換分析報告</h3>
+        <div class="score-summary">📊 大腦轉換分析報告</div>
         <div id="analysis-content"></div>
-        <button onclick="location.reload()" style="width:100%; margin-top:15px;">重新診斷</button>
+        <button onclick="location.reload()" style="width:100%; margin-top:20px; font-size: 1rem;">重新診斷</button>
     </div>
 </div>
 
 <script>
     const bank = [
-        { p: 'b', a: 'ㄅ', opts: ['ㄅ','ㄉ','ㄆ','b'], type: '視覺排他', text: '請選出ㄅ' },
-        { p: 'p', a: 'ㄆ', opts: ['ㄑ','ㄆ','q','ㄅ'], type: '視覺排他', text: '請選出ㄆ' },
-        { p: 'bà', a: 'ㄅㄚˋ', opts: ['ㄅㄚˇ','ㄅㄚˋ','ㄅㄚ','ㄅㄚˊ'], type: '聲調座標', text: '爸爸' },
-        { p: 'lóu', a: 'ㄌㄡˊ', opts: ['ㄌㄡˇ','ㄌㄡˊ','ㄌㄡ','ㄌㄡˋ'], type: '聲調座標', text: '樓梯' },
-        { p: 'lian', a: 'ㄌㄧㄢ', opts: ['ㄌㄧㄢ','ㄌㄧㄢˊ','ㄌㄧㄢˇ','ㄌㄧㄢˋ'], type: '結合韻轉換', text: '練習的連' },
-        { p: 'huang', a: 'ㄏㄨㄤ', opts: ['ㄏㄨㄤ','ㄏㄤ','ㄏㄨㄤˊ','ㄏㄨㄤˇ'], type: '結合韻轉換', text: '黃色的黃' },
-        { p: 'chi', a: 'ㄔ', opts: ['ㄔ','ㄔㄧ','ㄔㄨ','ㄕ'], type: '特殊空韻', text: '吃飯的吃' },
-        { p: 'si', a: 'ㄙ', opts: ['ㄙ','ㄙㄧ','ㄙㄨ','ㄕ'], type: '特殊空韻', text: '數字四' },
-        { p: 'xué xiào', a: 'ㄒㄩㄝˊ ㄒㄧㄠˋ', opts: ['ㄒㄩㄝˊ ㄒㄧㄠˋ','ㄒㄩㄝˇ ㄒㄧㄠ','ㄒㄩㄝ ㄒㄧㄠˇ','ㄒㄩㄝˋ ㄒㄧㄠˊ'], type: '綜合自動化', text: '學校' }
+        { p: 'b', a: 'ㄅ', opts: ['ㄅ','ㄉ','ㄆ','d'], type: '1.視覺排他' },
+        { p: 'p', a: 'ㄆ', opts: ['ㄑ','ㄆ','q','ㄅ'], type: '1.視覺排他' },
+        { p: 'bà', a: 'ㄅㄚˋ', opts: ['ㄅㄚˇ','ㄅㄚˋ','ㄅㄚ','ㄅㄚˊ'], type: '2.聲調座標' },
+        { p: 'lóu', a: 'ㄌㄡˊ', opts: ['ㄌㄡˇ','ㄌㄡˊ','ㄌㄡ','ㄌㄡˋ'], type: '2.聲調座標' },
+        { p: 'lian', a: 'ㄌㄧㄢ', opts: ['ㄌㄧㄢ','ㄌㄧㄢˊ','ㄌㄧㄢˇ','ㄌㄧㄢˋ'], type: '3.結合韻轉換' },
+        { p: 'huang', a: 'ㄏㄨㄤ', opts: ['ㄏㄨㄤ','ㄏㄤ','ㄏㄨㄤˊ','ㄏㄨㄤˇ'], type: '3.結合韻轉換' },
+        { p: 'chi', a: 'ㄔ', opts: ['ㄔ','ㄔㄧ','ㄔㄨ','ㄕ'], type: '4.特殊空韻' },
+        { p: 'si', a: 'ㄙ', opts: ['ㄙ','ㄙㄧ','ㄙㄨ','ㄕ'], type: '4.特殊空韻' },
+        { p: 'xué xiào', a: 'ㄒㄩㄝˊ ㄒㄧㄠˋ', opts: ['ㄒㄩㄝˊ ㄒㄧㄠˋ','ㄒㄩㄝˇ ㄒㄧㄠ','ㄒㄩㄝ ㄒㄧㄠˇ','ㄒㄩㄝˋ ㄒㄧㄠˊ'], type: '5.綜合自動化' }
     ];
 
     let current = 0;
     let results = [];
     let startTime;
-
-    function speak(txt) {
-        const msg = new SpeechSynthesisUtterance(txt);
-        msg.lang = 'zh-TW';
-        msg.rate = 0.8;
-        window.speechSynthesis.speak(msg);
-    }
 
     function startQuiz() {
         current = 0;
@@ -72,9 +90,9 @@
         if (current >= bank.length) return showReport();
         
         const q = bank[current];
-        document.getElementById('progress').innerText = `指標測驗中：${current + 1} / ${bank.length}`;
+        document.getElementById('progress').innerText = `目前進度：${current + 1} / ${bank.length}`;
         document.getElementById('pinyin-display').innerText = q.p;
-        document.getElementById('instruction').innerText = "聽聽看，這是哪個注音？";
+        document.getElementById('instruction').innerText = "這組拼音密碼對應的是：";
         
         const optsDiv = document.getElementById('options');
         optsDiv.innerHTML = '';
@@ -85,7 +103,6 @@
             optsDiv.appendChild(b);
         });
 
-        speak(q.text);
         startTime = performance.now();
     }
 
@@ -111,13 +128,13 @@
             const avgTime = items.reduce((a, b) => a + b.time, 0) / items.length;
             
             html += `<div class="indicator">
-                <strong>【${t}】</strong> 答對率：${score}/${items.length}<br>
-                平均反應時長：${avgTime.toFixed(2)} 秒<br>
-                <small>${avgTime > 3 ? '⚠️ 反應較慢，大腦系統切換中' : '✅ 轉換流暢'}</small>
+                <strong>${t}</strong><br>
+                答對率：${score}/${items.length} | 反應時長：${avgTime.toFixed(1)}s<br>
+                結果：${avgTime > 3 ? '需要加強轉換練習' : '轉換速度合格'}
             </div>`;
         });
 
-        document.getElementById('analysis-content').innerHTML = html + "<p><strong>笑長建議：</strong> 根據數據，重點應放在反應超過 3 秒的指標項目。</p>";
+        document.getElementById('analysis-content').innerHTML = html;
     }
 </script>
 

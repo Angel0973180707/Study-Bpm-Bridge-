@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>天使笑長 | 大腦密碼轉換前測</title>
+    <title>天使笑長 | 大腦密碼轉換前測系統</title>
     <style>
         :root {
             --primary: #FFB7C5; --secondary: #E0F7FA; --accent: #FF8A80;
@@ -11,30 +11,27 @@
         body { font-family: "Microsoft JhengHei", sans-serif; background: #FFF9E3; display: flex; justify-content: center; padding: 20px; }
         #app { max-width: 500px; width: 100%; background: white; padding: 25px; border-radius: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); text-align: center; }
         
-        /* 縮小顯示區域，解決斷字問題 */
         .pinyin-box { 
-            font-size: 2rem; /* 縮小字體 */
+            font-size: 2.2rem; 
             color: #00796B; 
             margin: 15px 0; 
             font-weight: bold;
             letter-spacing: 2px;
-            word-break: keep-all; /* 防止單詞斷開 */
+            word-break: keep-all;
         }
         
         #instruction { color: #888; font-size: 1rem; margin-bottom: 20px; }
-
         .btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 15px; }
         
-        /* 調整按鈕大小以適應注音詞組 */
         button { 
-            padding: 12px 8px; 
-            font-size: 1.1rem; /* 稍微縮小按鈕字體 */
+            padding: 15px 8px; 
+            font-size: 1.2rem; 
             border: 2px solid var(--secondary); 
             border-radius: 12px; 
             background: white; 
             cursor: pointer; 
             transition: 0.2s;
-            white-space: nowrap; /* 確保注音不換行 */
+            white-space: nowrap;
         }
         button:hover { background: var(--primary); color: white; }
         
@@ -48,7 +45,7 @@
 <div id="app">
     <h1 style="color: var(--accent); font-size: 1.4rem;">✨ 大腦密碼轉換前測 ✨</h1>
     <div id="quiz-container">
-        <p id="progress" style="font-size: 0.9rem; color: #999;">點擊按鈕開始診斷</p>
+        <p id="progress" style="font-size: 0.9rem; color: #999;">專業轉銜診斷工具</p>
         <div class="pinyin-box" id="pinyin-display">歡迎使用</div>
         <p id="instruction">請找出對應的注音符號</p>
         <div class="btn-grid" id="options">
@@ -65,15 +62,27 @@
 
 <script>
     const bank = [
-        { p: 'b', a: 'ㄅ', opts: ['ㄅ','ㄉ','ㄆ','d'], type: '1.視覺排他' },
-        { p: 'p', a: 'ㄆ', opts: ['ㄑ','ㄆ','q','ㄅ'], type: '1.視覺排他' },
-        { p: 'bà', a: 'ㄅㄚˋ', opts: ['ㄅㄚˇ','ㄅㄚˋ','ㄅㄚ','ㄅㄚˊ'], type: '2.聲調座標' },
-        { p: 'lóu', a: 'ㄌㄡˊ', opts: ['ㄌㄡˇ','ㄌㄡˊ','ㄌㄡ','ㄌㄡˋ'], type: '2.聲調座標' },
-        { p: 'lian', a: 'ㄌㄧㄢ', opts: ['ㄌㄧㄢ','ㄌㄧㄢˊ','ㄌㄧㄢˇ','ㄌㄧㄢˋ'], type: '3.結合韻轉換' },
-        { p: 'huang', a: 'ㄏㄨㄤ', opts: ['ㄏㄨㄤ','ㄏㄤ','ㄏㄨㄤˊ','ㄏㄨㄤˇ'], type: '3.結合韻轉換' },
-        { p: 'chi', a: 'ㄔ', opts: ['ㄔ','ㄔㄧ','ㄔㄨ','ㄕ'], type: '4.特殊空韻' },
-        { p: 'si', a: 'ㄙ', opts: ['ㄙ','ㄙㄧ','ㄙㄨ','ㄕ'], type: '4.特殊空韻' },
-        { p: 'xué xiào', a: 'ㄒㄩㄝˊ ㄒㄧㄠˋ', opts: ['ㄒㄩㄝˊ ㄒㄧㄠˋ','ㄒㄩㄝˇ ㄒㄧㄠ','ㄒㄩㄝ ㄒㄧㄠˇ','ㄒㄩㄝˋ ㄒㄧㄠˊ'], type: '5.綜合自動化' }
+        // 1. 視覺排他 (移除所有英文字母干擾)
+        { p: 'b', a: 'ㄅ', opts: ['ㄅ','ㄉ','ㄆ','ㄌ'], type: '1.視覺排他' },
+        { p: 'p', a: 'ㄆ', opts: ['ㄑ','ㄆ','ㄡ','ㄅ'], type: '1.視覺排他' },
+        { p: 'm', a: 'ㄇ', opts: ['ㄇ','ㄋ','ㄈ','ㄩ'], type: '1.視覺排他' },
+
+        // 2. 聲調與聲母辨識 (加入相似音聲母，如 p/b 混淆測試)
+        { p: 'bà', a: 'ㄅㄚˋ', opts: ['ㄅㄚˋ','ㄆㄚˋ','ㄅㄚˇ','ㄆㄚ'], type: '2.聲調與聲母' },
+        { p: 'lóu', a: 'ㄌㄡˊ', opts: ['ㄌㄡˊ','ㄋㄡˊ','ㄌㄡˇ','ㄖㄡˊ'], type: '2.聲調與聲母' },
+        { p: 'mǎ', a: 'ㄇㄚˇ', opts: ['ㄇㄚˇ','ㄋㄚˇ','ㄇㄚˊ','ㄋㄚ'], type: '2.聲調與聲母' },
+
+        // 3. 結合韻轉換 (針對 ian/uang 等大陸拼音常見結合韻)
+        { p: 'lian', a: 'ㄌㄧㄢ', opts: ['ㄌㄧㄢ','ㄌㄢ','ㄌㄧㄥ','ㄋㄧㄢ'], type: '3.結合韻轉換' },
+        { p: 'huang', a: 'ㄏㄨㄤ', opts: ['ㄏㄨㄤ','ㄏㄤ','ㄏㄨㄥ','ㄏㄨㄢ'], type: '3.結合韻轉換' },
+
+        // 4. 特殊空韻 (偵測是否會多加 ㄧ)
+        { p: 'chi', a: 'ㄔ', opts: ['ㄔ','ㄔㄧ','ㄕ','ㄗ'], type: '4.特殊空韻' },
+        { p: 'si', a: 'ㄙ', opts: ['ㄙ','ㄙㄧ','ㄕ','ㄒㄧ'], type: '4.特殊空韻' },
+
+        // 5. 綜合自動化流暢度
+        { p: 'xué xiào', a: 'ㄒㄩㄝˊ ㄒㄧㄠˋ', opts: ['ㄒㄩㄝˊ ㄒㄧㄠˋ','ㄒㄩㄝˇ ㄒㄧㄠ','ㄒㄧㄝˊ ㄒㄧㄠˋ','ㄒㄩㄝˊ ㄒㄧㄠ'], type: '5.綜合自動化' },
+        { p: 'péng yǒu', a: 'ㄆㄥˊ ㄧㄡˇ', opts: ['ㄆㄥˊ ㄧㄡˇ','ㄅㄥˊ ㄧㄡˇ','ㄆㄥˊ ㄧㄡ','ㄆㄥˇ ㄧㄡ'], type: '5.綜合自動化' }
     ];
 
     let current = 0;
@@ -92,11 +101,15 @@
         const q = bank[current];
         document.getElementById('progress').innerText = `目前進度：${current + 1} / ${bank.length}`;
         document.getElementById('pinyin-display').innerText = q.p;
-        document.getElementById('instruction').innerText = "這組拼音密碼對應的是：";
+        document.getElementById('instruction').innerText = "這組拼音對應的是：";
         
         const optsDiv = document.getElementById('options');
         optsDiv.innerHTML = '';
-        q.opts.forEach(o => {
+        
+        // 隨機排序選項
+        const shuffledOpts = [...q.opts].sort(() => Math.random() - 0.5);
+        
+        shuffledOpts.forEach(o => {
             const b = document.createElement('button');
             b.innerText = o;
             b.onclick = () => handleAnswer(o);
@@ -129,8 +142,8 @@
             
             html += `<div class="indicator">
                 <strong>${t}</strong><br>
-                答對率：${score}/${items.length} | 反應時長：${avgTime.toFixed(1)}s<br>
-                結果：${avgTime > 3 ? '需要加強轉換練習' : '轉換速度合格'}
+                正確率：${score}/${items.length} | 反應：${avgTime.toFixed(1)}秒<br>
+                建議：${avgTime > 2.5 || score < items.length ? '🟡 需加強此項轉譯訓練' : '🟢 轉換流暢'}
             </div>`;
         });
 

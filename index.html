@@ -1,155 +1,368 @@
-<!DOCTYPE html>
-<html lang="zh-Hant">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>天使笑長 | 大腦密碼轉換前測系統</title>
-    <style>
-        :root {
-            --primary: #FFB7C5; --secondary: #E0F7FA; --accent: #FF8A80;
-        }
-        body { font-family: "Microsoft JhengHei", sans-serif; background: #FFF9E3; display: flex; justify-content: center; padding: 20px; }
-        #app { max-width: 500px; width: 100%; background: white; padding: 25px; border-radius: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); text-align: center; }
-        
-        .pinyin-box { 
-            font-size: 2.2rem; 
-            color: #00796B; 
-            margin: 15px 0; 
-            font-weight: bold;
-            letter-spacing: 2px;
-            word-break: keep-all;
-        }
-        
-        #instruction { color: #888; font-size: 1rem; margin-bottom: 20px; }
-        .btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 15px; }
-        
-        button { 
-            padding: 15px 8px; 
-            font-size: 1.2rem; 
-            border: 2px solid var(--secondary); 
-            border-radius: 12px; 
-            background: white; 
-            cursor: pointer; 
-            transition: 0.2s;
-            white-space: nowrap;
-        }
-        button:hover { background: var(--primary); color: white; }
-        
-        .report { text-align: left; background: #F1F8E9; padding: 20px; border-radius: 15px; margin-top: 20px; display: none; }
-        .indicator { margin-bottom: 12px; border-bottom: 1px dashed #ccc; padding-bottom: 8px; font-size: 0.95rem; }
-        .score-summary { color: var(--accent); font-weight: bold; margin-bottom: 15px; border-bottom: 2px solid var(--accent); display: inline-block; }
-    </style>
-</head>
-<body>
+import React, { useState, useEffect, useRef } from 'react';
+import { 
+  Smile, Brain, Target, CreditCard, ChevronRight, CheckCircle2, 
+  AlertCircle, Clock, Sparkles, ArrowRight, BookOpen, Heart, RefreshCw,
+  ExternalLink, FileEdit, Send
+} from 'lucide-react';
 
-<div id="app">
-    <h1 style="color: var(--accent); font-size: 1.4rem;">✨ 大腦密碼轉換前測 ✨</h1>
-    <div id="quiz-container">
-        <p id="progress" style="font-size: 0.9rem; color: #999;">專業轉銜診斷工具</p>
-        <div class="pinyin-box" id="pinyin-display">歡迎使用</div>
-        <p id="instruction">請找出對應的注音符號</p>
-        <div class="btn-grid" id="options">
-            <button onclick="startQuiz()" style="grid-column: span 2;">開始前測</button>
+const apiKey = ""; // 執行環境自動注入
+
+// --- 五大指標前測題庫 ---
+const QUIZ_BANK = [
+  { id: 1, type: '視覺排他', p: 'b', a: 'ㄅ', opts: ['ㄅ','ㄉ','ㄆ','ㄌ'], hint: '分辨字母 b 與注音 ㄅ 的字形結構' },
+  { id: 2, type: '視覺排他', p: 'p', a: 'ㄆ', opts: ['ㄑ','ㄆ','ㄡ','ㄅ'], hint: '偵測視覺反轉干擾' },
+  { id: 3, type: '視覺排他', p: 'm', a: 'ㄇ', opts: ['ㄇ','ㄋ','ㄈ','ㄩ'], hint: '分辨相似閉口音符號' },
+  { id: 4, type: '聲調/聲母辨識', p: 'bà', a: 'ㄅㄚˋ', opts: ['ㄅㄚˋ','ㄆㄚˋ','ㄅㄚˇ','ㄆㄚ'], hint: '測試聲調四聲與送氣音辨識' },
+  { id: 5, type: '聲調/聲母辨識', p: 'lóu', a: 'ㄌㄡˊ', opts: ['ㄌㄡˊ','ㄋㄡˊ','ㄌㄡˇ','ㄖㄡˊ'], hint: '測試邊音 L 與鼻音 N 的轉換' },
+  { id: 6, type: '結合韻轉換', p: 'lian', a: 'ㄌㄧㄢ', opts: ['ㄌㄧㄢ','ㄌㄢ','ㄌㄧㄥ','ㄋㄧㄢ'], hint: '偵測介音 i 的轉譯完整度' },
+  { id: 7, type: '結合韻轉換', p: 'huang', a: 'ㄏㄨㄤ', opts: ['ㄏㄨㄤ','ㄏㄤ','ㄏㄨㄥ','ㄏㄨㄢ'], hint: '偵測三拼音節的轉換流暢度' },
+  { id: 8, type: '特殊空韻', p: 'chi', a: 'ㄔ', opts: ['ㄔ','ㄔㄧ','ㄕ','ㄗ'], hint: '診斷是否會誤加母音 ㄧ' },
+  { id: 9, type: '特殊空韻', p: 'si', a: 'ㄙ', opts: ['ㄙ','ㄙㄧ','ㄕ','ㄒㄧ'], hint: '診斷舌尖音的獨立發音規則' },
+  { id: 10, type: '綜合自動化', p: 'xué xiào', a: 'ㄒㄩㄝˊ ㄒㄧㄠˋ', opts: ['ㄒㄩㄝˊ ㄒㄧㄠˋ','ㄒㄩㄝˇ ㄒㄧㄠ','ㄒㄧㄝˊ ㄒㄧㄠˋ','ㄒㄩㄝˊ ㄒㄧㄠ'], hint: '測量雙音節詞彙的轉換速度' },
+  { id: 11, type: '綜合自動化', p: 'péng yǒu', a: 'ㄆㄥˊ ㄧㄡˇ', opts: ['ㄆㄥˊ ㄧㄡˇ','ㄅㄥˊ ㄧㄡˇ','ㄆㄥˊ ㄧㄡ','ㄆㄥˇ ㄧㄡ'], hint: '測量常用詞彙的自動化反射' }
+];
+
+export default function App() {
+  const [step, setStep] = useState(0); 
+  const [formData, setFormData] = useState({ name: '', grade: '', hasFilledForm: false });
+  const [quizResults, setQuizResults] = useState([]);
+  const [reportData, setReportData] = useState(null);
+  const [isSent, setIsSent] = useState(false);
+
+  // --- 處理前測結束 ---
+  const handleQuizFinish = (results) => {
+    setQuizResults(results);
+    setStep(2);
+    generateLearningPlan(results);
+  };
+
+  // --- 智多星系統方案生成 ---
+  const generateLearningPlan = async (results) => {
+    const correctCount = results.filter(r => r.correct).length;
+    const avgTime = results.reduce((a, b) => a + b.time, 0) / results.length;
+
+    const analysisData = {
+      user: formData,
+      accuracy: `${correctCount} / ${results.length}`,
+      averageTime: `${avgTime.toFixed(2)}s`,
+      details: results.map(r => ({ type: r.type, correct: r.correct, time: r.time.toFixed(2) + 's' }))
+    };
+
+    // 智多星 System Prompt：設定 10 週 20 堂起跳的規則
+    const systemPrompt = `你是一位「天使笑長」，專業於兩岸拼音注音銜接教育。
+    請根據前測數據（正確率與反應時間）擬定「幸福轉譯伴學方案」。
+    
+    規劃準則：
+    1. 方案基點：至少 10 週，每週 2 堂，總計 20 堂起跳。
+    2. 請根據數據分配這 20 堂課的重點（例如：視覺排他需 6 堂、結合韻需 8 堂等）。
+    3. 若表現極佳，目標為「自動化反射與流暢度提升」；若表現不佳，目標為「基礎轉譯重建」。
+    
+    請以溫暖、正能量且專業的口吻回傳 JSON：
+    {
+      "diagnosis": "針對指標的診斷分析...",
+      "bottleneck": "最大的轉譯障礙點...",
+      "targetLessons": 20, 
+      "weeklyPlan": "10 週伴學規劃概覽...",
+      "milestones": ["階段目標一", "階段目標二", "階段目標三"],
+      "angelNote": "暖心建議..."
+    }`;
+
+    try {
+      const resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: JSON.stringify(analysisData) }] }],
+          systemInstruction: { parts: [{ text: systemPrompt }] },
+          generationConfig: { responseMimeType: "application/json" }
+        })
+      });
+      const data = await resp.json();
+      setReportData(JSON.parse(data.candidates[0].content.parts[0].text));
+      setStep(3);
+    } catch (e) {
+      console.error(e);
+      setStep(1);
+    }
+  };
+
+  // --- 傳送結果給笑長 (LINE) ---
+  const sendToPrincipal = () => {
+    const accuracy = quizResults.filter(r => r.correct).length;
+    const summary = `【天使笑長轉譯診斷報告】\n\n寶貝姓名：${formData.name}\n診斷結果：正確率 ${accuracy}/${quizResults.length}\n規劃伴學：10 週 (每週 2 堂，預計 ${reportData?.targetLessons} 堂)\n\n※ 本方案將參考前測結果擬定細部方案，實際堂數視學習情況調整。\n\n卡關分析：\n${reportData?.bottleneck}\n\n笑長寄語：\n${reportData?.angelNote}`;
+    
+    const lineUrl = `https://line.me/R/msg/text/?${encodeURIComponent(summary)}`;
+    window.open(lineUrl, '_blank');
+    setIsSent(true);
+  };
+
+  return (
+    <div className="min-h-screen bg-[#FFF9E3] font-sans pb-10 text-slate-800">
+      {/* Header */}
+      <header className="bg-white px-6 pt-12 pb-6 rounded-b-[40px] shadow-sm border-b border-pink-100 flex items-center justify-between sticky top-0 z-50">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 bg-pink-400 rounded-xl flex items-center justify-center text-white shadow-lg">
+            <Smile size={24} />
+          </div>
+          <div>
+            <h1 className="text-lg font-bold text-gray-800">天使笑長</h1>
+            <p className="text-[10px] text-pink-500 font-bold tracking-widest uppercase">幸福智多星系統</p>
+          </div>
         </div>
-    </div>
+        <div className="bg-amber-50 px-3 py-1 rounded-full flex items-center gap-1 border border-amber-100">
+          <Sparkles size={12} className="text-amber-500" />
+          <span className="text-[10px] font-bold text-amber-600">伴學診斷</span>
+        </div>
+      </header>
 
-    <div id="report-area" class="report">
-        <div class="score-summary">📊 大腦轉換分析報告</div>
-        <div id="analysis-content"></div>
-        <button onclick="location.reload()" style="width:100%; margin-top:20px; font-size: 1rem;">重新診斷</button>
-    </div>
-</div>
-
-<script>
-    const bank = [
-        // 1. 視覺排他 (移除所有英文字母干擾)
-        { p: 'b', a: 'ㄅ', opts: ['ㄅ','ㄉ','ㄆ','ㄌ'], type: '1.視覺排他' },
-        { p: 'p', a: 'ㄆ', opts: ['ㄑ','ㄆ','ㄡ','ㄅ'], type: '1.視覺排他' },
-        { p: 'm', a: 'ㄇ', opts: ['ㄇ','ㄋ','ㄈ','ㄩ'], type: '1.視覺排他' },
-
-        // 2. 聲調與聲母辨識 (加入相似音聲母，如 p/b 混淆測試)
-        { p: 'bà', a: 'ㄅㄚˋ', opts: ['ㄅㄚˋ','ㄆㄚˋ','ㄅㄚˇ','ㄆㄚ'], type: '2.聲調與聲母' },
-        { p: 'lóu', a: 'ㄌㄡˊ', opts: ['ㄌㄡˊ','ㄋㄡˊ','ㄌㄡˇ','ㄖㄡˊ'], type: '2.聲調與聲母' },
-        { p: 'mǎ', a: 'ㄇㄚˇ', opts: ['ㄇㄚˇ','ㄋㄚˇ','ㄇㄚˊ','ㄋㄚ'], type: '2.聲調與聲母' },
-
-        // 3. 結合韻轉換 (針對 ian/uang 等大陸拼音常見結合韻)
-        { p: 'lian', a: 'ㄌㄧㄢ', opts: ['ㄌㄧㄢ','ㄌㄢ','ㄌㄧㄥ','ㄋㄧㄢ'], type: '3.結合韻轉換' },
-        { p: 'huang', a: 'ㄏㄨㄤ', opts: ['ㄏㄨㄤ','ㄏㄤ','ㄏㄨㄥ','ㄏㄨㄢ'], type: '3.結合韻轉換' },
-
-        // 4. 特殊空韻 (偵測是否會多加 ㄧ)
-        { p: 'chi', a: 'ㄔ', opts: ['ㄔ','ㄔㄧ','ㄕ','ㄗ'], type: '4.特殊空韻' },
-        { p: 'si', a: 'ㄙ', opts: ['ㄙ','ㄙㄧ','ㄕ','ㄒㄧ'], type: '4.特殊空韻' },
-
-        // 5. 綜合自動化流暢度
-        { p: 'xué xiào', a: 'ㄒㄩㄝˊ ㄒㄧㄠˋ', opts: ['ㄒㄩㄝˊ ㄒㄧㄠˋ','ㄒㄩㄝˇ ㄒㄧㄠ','ㄒㄧㄝˊ ㄒㄧㄠˋ','ㄒㄩㄝˊ ㄒㄧㄠ'], type: '5.綜合自動化' },
-        { p: 'péng yǒu', a: 'ㄆㄥˊ ㄧㄡˇ', opts: ['ㄆㄥˊ ㄧㄡˇ','ㄅㄥˊ ㄧㄡˇ','ㄆㄥˊ ㄧㄡ','ㄆㄥˇ ㄧㄡ'], type: '5.綜合自動化' }
-    ];
-
-    let current = 0;
-    let results = [];
-    let startTime;
-
-    function startQuiz() {
-        current = 0;
-        results = [];
-        nextQuestion();
-    }
-
-    function nextQuestion() {
-        if (current >= bank.length) return showReport();
-        
-        const q = bank[current];
-        document.getElementById('progress').innerText = `目前進度：${current + 1} / ${bank.length}`;
-        document.getElementById('pinyin-display').innerText = q.p;
-        document.getElementById('instruction').innerText = "這組拼音對應的是：";
-        
-        const optsDiv = document.getElementById('options');
-        optsDiv.innerHTML = '';
-        
-        // 隨機排序選項
-        const shuffledOpts = [...q.opts].sort(() => Math.random() - 0.5);
-        
-        shuffledOpts.forEach(o => {
-            const b = document.createElement('button');
-            b.innerText = o;
-            b.onclick = () => handleAnswer(o);
-            optsDiv.appendChild(b);
-        });
-
-        startTime = performance.now();
-    }
-
-    function handleAnswer(ans) {
-        const duration = (performance.now() - startTime) / 1000;
-        const q = bank[current];
-        results.push({ ...q, userAns: ans, correct: ans === q.a, time: duration });
-        current++;
-        nextQuestion();
-    }
-
-    function showReport() {
-        document.getElementById('quiz-container').style.display = 'none';
-        const reportArea = document.getElementById('report-area');
-        reportArea.style.display = 'block';
-
-        const types = [...new Set(bank.map(b => b.type))];
-        let html = "";
-
-        types.forEach(t => {
-            const items = results.filter(r => r.type === t);
-            const score = items.filter(i => i.correct).length;
-            const avgTime = items.reduce((a, b) => a + b.time, 0) / items.length;
+      <main className="p-6 max-w-md mx-auto">
+        {/* Step 0: Google 表單 */}
+        {step === 0 && (
+          <div className="bg-white p-7 rounded-[32px] shadow-sm border border-pink-50 animate-in fade-in">
+            <div className="flex items-center gap-2 mb-6">
+              <FileEdit className="text-pink-400" size={20} />
+              <h2 className="text-xl font-bold text-slate-700">第一步：預約表單</h2>
+            </div>
             
-            html += `<div class="indicator">
-                <strong>${t}</strong><br>
-                正確率：${score}/${items.length} | 反應：${avgTime.toFixed(1)}秒<br>
-                建議：${avgTime > 2.5 || score < items.length ? '🟡 需加強此項轉譯訓練' : '🟢 轉換流暢'}
-            </div>`;
-        });
+            <div className="space-y-6">
+              <p className="text-sm text-slate-500 leading-relaxed">
+                在開始診斷前，請先填寫預約表單，讓笑長初步了解寶貝的背景。
+              </p>
 
-        document.getElementById('analysis-content').innerHTML = html;
+              <a 
+                href="https://docs.google.com/forms/d/your-form-id" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="w-full bg-blue-50 text-blue-600 py-4 rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-blue-100 transition-colors"
+                onClick={() => setFormData({...formData, hasFilledForm: true})}
+              >
+                前往 Google 預約表單 <ExternalLink size={18} />
+              </a>
+
+              <div className="pt-4 border-t border-dashed">
+                <label className="text-xs font-bold text-gray-400 ml-1 mb-1 block">填寫完成後，請輸入寶貝姓名</label>
+                <input 
+                  className="w-full p-4 bg-gray-50 rounded-2xl border-none outline-none focus:ring-2 focus:ring-pink-200" 
+                  placeholder="寶貝姓名" 
+                  value={formData.name}
+                  onChange={e=>setFormData({...formData, name:e.target.value})} 
+                />
+              </div>
+
+              <button 
+                disabled={!formData.name || !formData.hasFilledForm} 
+                onClick={()=>setStep(1)} 
+                className="w-full bg-pink-400 text-white py-4 rounded-2xl font-bold shadow-lg shadow-pink-100 disabled:opacity-50 mt-4 flex items-center justify-center gap-2 active:scale-95 transition-all"
+              >
+                進入前測診斷 <ArrowRight size={18} />
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Step 1: 互動前測 */}
+        {step === 1 && <InteractiveQuiz onFinish={handleQuizFinish} />}
+
+        {/* Step 2: 診斷中 */}
+        {step === 2 && (
+          <div className="text-center py-20 flex flex-col items-center">
+            <div className="w-24 h-24 bg-pink-100 rounded-full flex items-center justify-center mb-6 animate-bounce text-pink-400">
+              <Brain size={48} />
+            </div>
+            <h3 className="text-xl font-bold text-gray-800">智多星系統運算中</h3>
+            <p className="text-sm text-gray-400 mt-2 px-10 leading-relaxed">
+              正分析指標數據，為寶貝規劃 10 週伴學方案...
+            </p>
+          </div>
+        )}
+
+        {/* Step 3: 方案報告 */}
+        {step === 3 && reportData && (
+          <div className="space-y-6 animate-in zoom-in">
+            <div className="bg-white p-7 rounded-[40px] border-l-8 border-pink-400 shadow-sm relative">
+              <h2 className="text-2xl font-black text-gray-800 mb-6 tracking-tight">【{formData.name}】個別化伴學方案</h2>
+              
+              <div className="space-y-6">
+                <section>
+                  <h4 className="text-xs font-black text-pink-400 uppercase tracking-widest mb-3">指標診斷與分析</h4>
+                  <div className="bg-gray-50 p-5 rounded-3xl text-sm leading-relaxed text-gray-600 border border-gray-100">
+                    {reportData.diagnosis}
+                  </div>
+                </section>
+
+                <section className="bg-amber-50 p-5 rounded-[30px] border border-amber-100">
+                  <h4 className="font-bold text-amber-700 text-sm mb-2 flex items-center gap-2"><Target size={18}/> 轉譯障礙點解析</h4>
+                  <p className="text-sm text-gray-700 leading-relaxed font-medium">{reportData.bottleneck}</p>
+                </section>
+
+                <section>
+                  <div className="flex justify-between items-end mb-3 px-1">
+                    <h4 className="font-bold text-gray-700 text-sm">伴學時長規劃</h4>
+                    <div className="text-right">
+                      <span className="text-pink-500 font-black text-2xl italic">{reportData.targetLessons} 堂</span>
+                      <p className="text-[10px] text-pink-300 font-bold tracking-widest">10 週 · 每週 2 堂</p>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    {reportData.milestones.map((m, i) => (
+                      <div key={i} className="flex items-center gap-3 p-4 bg-white border border-gray-100 rounded-2xl shadow-sm">
+                        <CheckCircle2 size={18} className="text-green-500 shrink-0" />
+                        <span className="text-xs text-gray-600 font-bold">{m}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="mt-4 p-4 bg-gray-50 rounded-2xl border border-dashed border-gray-200">
+                    <p className="text-[10px] text-gray-500 leading-relaxed font-medium italic">
+                      ※ 註：笑長將參考此次前測結果擬定細部伴學方案。上述為預計堂數，實際堂數視寶貝學習吸收情況動態調整。
+                    </p>
+                  </div>
+                </section>
+
+                <div className="pt-6 border-t border-dashed border-pink-200">
+                  <div className="flex gap-3">
+                    <Heart className="text-pink-400 shrink-0" size={24} />
+                    <p className="text-sm font-bold text-pink-500 italic leading-relaxed">
+                      笑長悄悄話：{reportData.angelNote}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <button onClick={()=>setStep(4)} className="w-full mt-10 bg-slate-900 text-white py-4 rounded-2xl font-bold flex items-center justify-center gap-2 shadow-xl active:scale-95 transition-all">
+                確認方案並查看報價 <ArrowRight size={18} />
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Step 4: 報價 */}
+        {step === 4 && (
+          <div className="space-y-6 animate-in slide-in-from-bottom">
+            <div className="bg-white p-7 rounded-[32px] shadow-sm border border-pink-50">
+              <h2 className="text-xl font-bold text-gray-800 mb-8 flex items-center gap-2"><CreditCard size={24} className="text-pink-400"/> 伴學報價說明</h2>
+              
+              <div className="space-y-5">
+                <div className="p-8 bg-gradient-to-br from-pink-400 to-pink-500 text-white rounded-[40px] shadow-xl relative overflow-hidden">
+                  <div className="absolute -bottom-6 -right-6 opacity-10 rotate-12"><Smile size={120} /></div>
+                  <div className="flex justify-between items-start mb-6">
+                    <span className="bg-white/20 px-4 py-1.5 rounded-full text-[10px] font-bold tracking-widest uppercase text-white">彈性小時計費方案</span>
+                    <Clock size={24} />
+                  </div>
+                  
+                  <div className="space-y-1 mb-8">
+                    <p className="text-4xl font-black">$750</p>
+                    <p className="text-[10px] font-bold opacity-80 uppercase tracking-widest text-white/90">每堂 1.5 小時 (90分鐘)</p>
+                  </div>
+
+                  <div className="bg-white/10 p-5 rounded-3xl border border-white/20 backdrop-blur-sm text-xs font-bold leading-relaxed flex items-start gap-3">
+                    <CheckCircle2 size={16} className="shrink-0 mt-0.5 text-white" />
+                    本計畫預計時長：10 週<br/>伴學頻率：每週 2 堂
+                  </div>
+                </div>
+
+                <div className="p-5 bg-amber-50 rounded-[24px] border border-amber-100">
+                  <p className="text-xs text-amber-700 leading-relaxed font-bold flex items-start gap-2">
+                    <AlertCircle size={14} className="shrink-0 mt-0.5" />
+                    笑長提醒：診斷建議為 {reportData?.targetLessons} 堂。細部學習方案將依據前測指標精準擬定，實際堂數將隨寶貝進度彈性增減。
+                  </p>
+                </div>
+              </div>
+
+              <button 
+                onClick={sendToPrincipal} 
+                className="w-full mt-10 bg-pink-500 text-white py-5 rounded-[28px] font-bold shadow-xl shadow-pink-100 active:scale-95 transition-all flex items-center justify-center gap-3"
+              >
+                {isSent ? <CheckCircle2 size={20} /> : <Send size={20} />}
+                {isSent ? "已傳送診斷預約" : "傳送診斷結果給笑長並預約"}
+              </button>
+            </div>
+          </div>
+        )}
+      </main>
+
+      <footer className="text-center mt-10 px-6 opacity-30">
+        <p className="text-[9px] font-black tracking-[0.3em] uppercase text-slate-400">
+          Happiness Mastermind · Phonics Bridge System
+        </p>
+      </footer>
+    </div>
+  );
+}
+
+// --- 互動前測組件 ---
+function InteractiveQuiz({ onFinish }) {
+  const [index, setIndex] = useState(0);
+  const [results, setResults] = useState([]);
+  const startTimeRef = useRef(performance.now());
+  
+  const currentQ = QUIZ_BANK[index];
+
+  const [shuffledOpts, setShuffledOpts] = useState([]);
+  useEffect(() => {
+    setShuffledOpts([...currentQ.opts].sort(() => Math.random() - 0.5));
+    startTimeRef.current = performance.now();
+  }, [index]);
+
+  const handleAnswer = (ans) => {
+    const duration = (performance.now() - startTimeRef.current) / 1000;
+    const result = {
+      ...currentQ,
+      userAns: ans,
+      correct: ans === currentQ.a,
+      time: duration
+    };
+
+    const newResults = [...results, result];
+    
+    if (index < QUIZ_BANK.length - 1) {
+      setResults(newResults);
+      setIndex(index + 1);
+    } else {
+      onFinish(newResults);
     }
-</script>
+  };
 
-</body>
-</html>
+  return (
+    <div className="bg-white p-7 rounded-[32px] shadow-sm animate-in slide-in-from-right relative overflow-hidden border border-pink-50">
+      <div className="absolute top-0 left-0 w-full h-1.5 bg-gray-50">
+        <div 
+          className="h-full bg-pink-400 transition-all duration-500 ease-out" 
+          style={{ width: `${((index + 1) / QUIZ_BANK.length) * 100}%` }}
+        ></div>
+      </div>
+
+      <div className="flex justify-between items-center mb-8 mt-4">
+        <span className="bg-pink-100 text-pink-600 px-3 py-1 rounded-full text-[10px] font-black tracking-widest">{currentQ.type}</span>
+        <span className="text-[10px] font-black text-gray-300">指標探索 {index + 1} / {QUIZ_BANK.length}</span>
+      </div>
+
+      <div className="text-center mb-10">
+        <p className="text-xs text-gray-400 font-bold mb-4 uppercase tracking-[0.2em]">當寶貝看到拼音</p>
+        <div className="text-5xl font-black text-slate-800 font-serif tracking-widest bg-slate-50 py-10 rounded-[40px] border border-slate-100 mb-4 shadow-inner">
+          {currentQ.p}
+        </div>
+        <p className="text-sm text-gray-500 font-bold">對應哪一組注音？</p>
+      </div>
+      
+      <div className="grid grid-cols-2 gap-4">
+        {shuffledOpts.map((opt, i) => (
+          <button 
+            key={i} 
+            onClick={() => handleAnswer(opt)}
+            className="p-5 bg-white border-2 border-gray-100 rounded-3xl font-black text-2xl text-slate-700 hover:border-pink-400 hover:text-pink-500 hover:bg-pink-50 active:scale-95 transition-all shadow-sm"
+          >
+            {opt}
+          </button>
+        ))}
+      </div>
+
+      <div className="mt-10 p-5 bg-gray-50 rounded-2xl flex items-start gap-3 border border-gray-100">
+        <Brain size={18} className="text-pink-200 shrink-0 mt-0.5" />
+        <p className="text-[10px] text-gray-400 font-medium leading-relaxed italic">
+          診斷指標：{currentQ.hint}
+        </p>
+      </div>
+    </div>
+  );
+}
+

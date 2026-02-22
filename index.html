@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>天使笑長 | 大腦密碼轉換前測</title>
+    <style>
+        :root {
+            --primary-color: #FFB7C5; /* 溫暖粉 */
+            --secondary-color: #E0F7FA; /* 舒適藍 */
+            --text-color: #555;
+        }
+        body {
+            font-family: "Microsoft JhengHei", sans-serif;
+            background-color: #FFF9E3;
+            color: var(--text-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            margin: 0;
+        }
+        #app-container {
+            max-width: 500px;
+            width: 100%;
+            background: white;
+            padding: 20px;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        h1 { color: #FF8A80; font-size: 1.5rem; }
+        .intro { font-size: 0.9rem; margin-bottom: 20px; color: #888; }
+        .test-box {
+            background: var(--secondary-color);
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+        }
+        .pinyin-display {
+            font-size: 3rem;
+            font-weight: bold;
+            color: #00796B;
+            margin-bottom: 10px;
+        }
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        button {
+            padding: 15px;
+            font-size: 1.5rem;
+            border: 2px solid #B2EBF2;
+            border-radius: 12px;
+            background: white;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        button:hover { background: var(--primary-color); color: white; border-color: var(--primary-color); }
+        #result-area { display: none; text-align: left; }
+        .score-card { background: #F1F8E9; padding: 15px; border-radius: 10px; margin-top: 10px; }
+    </style>
+</head>
+<body>
+
+<div id="app-container">
+    <h1>✨ 大腦密碼轉換器 ✨</h1>
+    <p class="intro">小衛星，準備好挑戰你的「注音密碼」了嗎？</p>
+
+    <div id="game-area">
+        <div class="test-box">
+            <div id="question-count">題目 1 / 5</div>
+            <div class="pinyin-display" id="current-pinyin">b</div>
+            <p>這個拼音對應的「注音」是哪個？</p>
+        </div>
+
+        <div class="options-grid" id="options">
+            </div>
+    </div>
+
+    <div id="result-area">
+        <h2>🎉 測試完成！</h2>
+        <div class="score-card" id="analysis-text">
+            </div>
+        <button onclick="location.reload()" style="margin-top:20px; width:100%; font-size: 1rem;">重新測試</button>
+    </div>
+</div>
+
+<script>
+    const quizData = [
+        { p: 'b', a: 'ㄅ', options: ['ㄅ', 'ㄉ', 'ㄆ', 'd'], type: '視覺辨識' },
+        { p: 'p', a: 'ㄆ', options: ['ㄅ', 'ㄆ', 'q', 'ㄈ'], type: '視覺辨識' },
+        { p: 'mǎ', a: 'ㄇㄚˇ', options: ['ㄇㄚˊ', 'ㄇㄚˇ', 'ㄇㄚˋ', 'ㄇㄚ'], type: '聲調辨識' },
+        { p: 'tú', a: 'ㄊㄨˊ', options: ['ㄉㄨˊ', 'ㄊㄨˇ', 'ㄊㄨˊ', 'ㄈㄨˊ'], type: '拼讀轉換' },
+        { p: 'xiè', a: 'ㄒㄧㄝˋ', options: ['ㄒㄧㄝˇ', 'ㄒㄧㄝˋ', 'ㄒㄧㄝ', 'ㄒㄧㄟˋ'], type: '結合韻轉換' }
+    ];
+
+    let currentStep = 0;
+    let results = [];
+
+    function loadQuestion() {
+        const q = quizData[currentStep];
+        document.getElementById('question-count').innerText = `題目 ${currentStep + 1} / ${quizData.length}`;
+        document.getElementById('current-pinyin').innerText = q.p;
+        const optionsContainer = document.getElementById('options');
+        optionsContainer.innerHTML = '';
+        
+        q.options.forEach(opt => {
+            const btn = document.createElement('button');
+            btn.innerText = opt;
+            btn.onclick = () => handleAnswer(opt);
+            optionsContainer.appendChild(btn);
+        });
+    }
+
+    function handleAnswer(selected) {
+        const q = quizData[currentStep];
+        results.push({
+            type: q.type,
+            correct: selected === q.a,
+            pinyin: q.p,
+            selected: selected
+        });
+
+        currentStep++;
+        if (currentStep < quizData.length) {
+            loadQuestion();
+        } else {
+            showResult();
+        }
+    }
+
+    function showResult() {
+        document.getElementById('game-area').style.display = 'none';
+        document.getElementById('result-area').style.display = 'block';
+        
+        let correctCount = results.filter(r => r.correct).length;
+        let analysis = `<strong>測驗得分：${correctCount} / ${quizData.length}</strong><br><br>`;
+        
+        // 簡易分析邏輯
+        const errors = results.filter(r => !r.correct);
+        if(errors.length === 0) {
+            analysis += "🌟 太棒了！孩子的大腦切換非常順暢，可以直接進入閱讀練習。";
+        } else {
+            analysis += "<strong>笑長的觀察筆記：</strong><br>";
+            errors.forEach(e => {
+                analysis += `• [${e.type}] 弱點：拼音 ${e.pinyin} 誤選為 ${e.selected}<br>`;
+            });
+            analysis += "<br>💡 建議：加強符號視覺對應，並利用「幸福智多星」圖像卡輔助。";
+        }
+        
+        document.getElementById('analysis-text').innerHTML = analysis;
+    }
+
+    loadQuestion();
+</script>
+
+</body>
+</html>
